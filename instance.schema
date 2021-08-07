@@ -1,0 +1,55 @@
+"$id" = "https://example.com/address.schema.json";
+"$schema" = "https://json-schema.org/draft/2020-12/schema";
+description = "Partial schema for Azure instance metadata"
+type = object;
+properties {
+  compute {
+    type = object
+    properties {
+      name {
+        type = string  
+      }
+      osProfile {
+        type = object,
+        properties {
+            adminUsername { type = string }
+            computerName { type = string }
+            disablePasswordAuthentication { type = string }
+        }
+        required = [adminUsername, computerName, disablePasswordAuthentication]
+      },
+      publicKeys {
+        type = array
+        items {
+          type = object
+          properties {
+            keyData {
+              type = string
+            }
+            path {
+              type = string
+            }
+          }
+          required = [keyData, path]
+        }
+      }
+      storageProfile {
+        type = object
+        properties {
+          resourceDisk {
+            type = object
+            properties {
+              size {
+                type = string
+              }
+            }
+            required = [size]
+          }
+        }
+        required = [resourceDisk]
+      }
+    }
+    required = [name, osProfile, publicKeys, storageProfile]
+  }
+}
+required = [compute]
