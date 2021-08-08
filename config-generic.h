@@ -1,9 +1,12 @@
+// Copyright David Chisnall
+// SPDX-License-Identifier: MIT
 #pragma once
 
 #include <algorithm>
 #include <assert.h>
 #include <chrono>
 #include <initializer_list>
+#include <optional>
 #include <string_view>
 #include <ucl.h>
 #include <unordered_map>
@@ -15,11 +18,10 @@
 #	define CONFIG_DETAIL_NAMESPACE config::detail
 #endif
 #ifdef __clang__
-#define CONFIG_LIFETIME_BOUND [[clang::lifetimebound]]
+#	define CONFIG_LIFETIME_BOUND [[clang::lifetimebound]]
 #else
-#define CONFIG_LIFETIME_BOUND
+#	define CONFIG_LIFETIME_BOUND
 #endif
-
 
 namespace CONFIG_DETAIL_NAMESPACE
 {
@@ -80,6 +82,9 @@ namespace CONFIG_DETAIL_NAMESPACE
 			return *this;
 		}
 
+		/**
+		 * Copy assignment operator.
+		 */
 		UCLPtr &operator=(const UCLPtr o)
 		{
 			return (*this = o.obj);
@@ -502,7 +507,7 @@ namespace CONFIG_DETAIL_NAMESPACE
 		 * The type of a value.  All of the key-value pairs must refer to the
 		 * same `enum` type.
 		 */
-		using Value = std::remove_reference_t<decltype(get<0>(kvps).val)>;
+		using Value = std::remove_reference_t<decltype(std::get<0>(kvps).val)>;
 
 		/**
 		 * Look up a key.  This is `constexpr` and can be compile-time
@@ -522,12 +527,12 @@ namespace CONFIG_DETAIL_NAMESPACE
 			static_assert(
 			  std::is_same_v<
 			    Value,
-			    std::remove_reference_t<decltype(get<Element>(kvps).val)>>,
+			    std::remove_reference_t<decltype(std::get<Element>(kvps).val)>>,
 			  "All entries must use the same enum value");
 			// Re
-			if (key == get<Element>(kvps).key())
+			if (key == std::get<Element>(kvps).key())
 			{
-				return get<Element>(kvps).val;
+				return std::get<Element>(kvps).val;
 			}
 			if constexpr (Element + 1 < std::tuple_size_v<KVPs>)
 			{
@@ -655,12 +660,6 @@ namespace CONFIG_DETAIL_NAMESPACE
 		{
 			using Fs::operator()...;
 		};
-
-		/**
-		 * Deduction guide for Dispatcher.
-		 */
-		template<class... Ts>
-		Dispatcher(Ts &&...) -> Dispatcher<std::remove_reference_t<Ts>...>;
 
 		public:
 		/**
